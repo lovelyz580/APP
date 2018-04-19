@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>搜索到的电影</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div class="mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="mui-slider">
+						<div class="mui-slider-group mui-slider-loop">
+							<div class="mui-slider-item mui-slider-item-duplicate">
+								<a href="#"><img src="./images/114.jpg" /></a>
+							</div>
+							<div class="mui-slider-item">
+								<a href="#"><img src="./images/111.jpg" /></a>
+							</div>
+							<div class="mui-slider-item">
+								<a href="#"><img src="./images/112.jpg" /></a>
+							</div>
+							<div class="mui-slider-item">
+								<a href="#"><img src="./images/113.jpg" /></a>
+							</div>
+							<div class="mui-slider-item">
+								<a href="#"><img src="./images/114.jpg" /></a>
+							</div>
+						</div>
+
+					</div>
+					<div class="mui-row">
+						<div class="mui-table-view-cell">
+							<a class="mui-navigate-right">
+								搜索到的电影
+							</a>
+						</div>
+					</div>
+					<div id="movies" class="mui-row">
+						<div class="mui-col-xs-6" style="padding-right: 2px;">
+							<img src="./images/114.jpg" width="100%" />
+							<div>
+								<p>暮光之城 贝拉❤❤</p>
+
+							</div>
+						</div>
+						<div class="mui-col-xs-6" style="padding-left: 2px;">
+							<img src="./images/112.jpg" width="100%" />
+							<div>
+								<p>暮光之城：暮色</p>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<script src="js/mui.min.js"></script>
+		<script src="js/ip.js"></script>
+		<script type="text/javascript">
+			var currentPage = 1;
+			mui.init({
+				swipeBack: true,
+			//			mui('.mui-scroll-wrapper').scroll({
+			//				deceleration: 0.0005
+			//			});
+			});
+			var s;
+			//获取 key的值
+			mui.plusReady(function() {
+				s = plus.webview.currentWebview().key;
+				//console.log(s);
+			
+			
+			
+          mui.ajax('http://' + ip + '/douban/search.php', {
+				data: {
+					key: s
+				},
+				dataType: 'json', //服务器返回json格式数据
+				type: 'get', //HTTP请求类型
+				timeout: 10000, //超时时间设置为10秒；
+				success: function(data) {
+					//console.log(key);
+					seach(data);
+					//console.log(JSON.stringify(data));
+				},
+				error: function(xhr, type, errorThrown) {
+					//异常处理；
+					mui.toast("未能找到您搜索的电影");
+				}
+			});
+			
+			function seach(d) { //显示搜索到的电影
+				for(var i = 0; i < d.data.length; i++) {
+					var div = document.createElement("div");
+					div.setAttribute("class", "mui-col-xs-6");
+					div.setAttribute("mid", d.data[i].id);
+					div.setAttribute("id", "item");
+					var img = document.createElement("img");
+
+					img.setAttribute("src", d.data[i].images);
+					img.style.width = "100%";
+					var d1 = document.createElement("div");
+					d1.innerHTML = "<p>" + d.data[i].name + "</p>"
+					div.appendChild(img);
+					div.appendChild(d1);
+
+					if(i % 2 == 0) {
+						div.style.paddingRight = "2px";
+					} else {
+						div.style.paddingLeft = "2px";
+					}
+					document.getElementById("movies").appendChild(div);
+				}
+			};
+			mui("#movies").on("tap", "#item", function() {
+				var mid = this.getAttribute("mid");
+				//console.log(mid);
+				mui.openWindow({
+					id: "details.html",
+					url: "details.html",
+					styles: {
+						popGesture: "close"
+					},
+
+					extras: {
+						mid: mid
+					}
+				});
+
+			});
+			});
+		</script>
+	</body>
+
+</html>

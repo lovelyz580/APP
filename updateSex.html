@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a id="cancle" class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">修改性别</h1>
+			<a id="done" class="mui-pull-right" style="line-height: 44px;">完成</a>
+		</header>
+		<div class="mui-content">
+			<div class="mui-table-view-cell" id="div1">
+				<label>男</label>
+				<span sex="1"></span>
+			</div>
+			<div class="mui-table-view-cell" id="div2">
+				<label>女</label>
+				<span sex="0"></span>
+			</div>
+		</div>
+<script src="js/mui.min.js"></script>
+		<script src="js/ip.js"></script>
+		<script type="text/javascript">
+			var sex=2;
+			mui.init()
+		
+			mui.plusReady(function() {
+				var user = JSON.parse(plus.storage.getItem("user"));
+				if(user.sex == 1) {
+
+					document.querySelector("#div1 span").setAttribute("class", "mui-icon mui-icon-checkmarkempty mui-pull-right");
+
+				} else if(user.sex == 0) {
+					document.querySelector("#div2 span").setAttribute("class", "mui-icon mui-icon-checkmarkempty mui-pull-right");
+
+				}
+				
+				document.getElementById("done").addEventListener("tap", function() {
+				var user = plus.storage.getItem("user");
+				user = JSON.parse(user);
+				
+				var spans = document.querySelectorAll("div span");
+				//alert(value);
+				if(sex==2){
+					mui.toast("性别没有变化");
+					return;
+				}
+				mui.ajax('http://' + ip + '/douban/updataInfo.php', {
+					
+					data: {
+						id:user.id,
+						col:'sex',
+						value:sex
+					},
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: 100000, //超时时间设置为10秒；
+					success: function(data) {
+
+						if(data.code == 200) {
+							plus.nativeUI.toast(data.message);
+							user.sex = sex;
+							plus.storage.setItem("user",JSON.stringify(user));
+							var target = plus.webview.getWebviewById("person.html");
+							mui.fire(target,"update",{key:"sex",value:sex});
+							mui.back();
+
+						} else {
+							plus.nativeUI.toast(data.message);
+						}
+
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						mui.toast("网络不给力");
+					}
+				});
+
+				//console.log("done");
+				mui.back();
+			});
+
+			})
+			mui(".mui-content").on("tap", ".mui-table-view-cell", function(cindex) {
+				var span = this.querySelector("span");
+				if(span.getAttribute("class") == " " || span.getAttribute("class") == undefined) {
+					var spans = document.querySelectorAll(".mui-table-view-cell span");
+					mui.each(spans, function(index, object) {
+						object.removeAttribute("class");
+					});
+					span.setAttribute("class", "mui-icon mui-icon-checkmarkempty mui-pull-right");
+					sex = span.getAttribute("sex");
+				}
+			});
+		</script>
+	</body>
+
+</html>

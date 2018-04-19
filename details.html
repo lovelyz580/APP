@@ -1,0 +1,307 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link href="css/video-js.css" rel="stylesheet" />
+		<style>
+			.mui-bar-footer {
+				background: #eee;
+				height: 40px;
+				padding-top: 1px !important;
+				padding-bottom: 2px !important;
+			}
+			
+			.footerdiv {
+				float: left;
+			}
+			
+			#left {
+				width: 60%;
+			}
+			
+			#left_two {
+				width: 80%;
+			}
+			
+			#left_two input {
+				border-radius: 10px;
+			}
+			
+			#center {
+				width: 15%;
+				line-height: 33px;
+				margin-left: 8%;
+			}
+			
+			#right {
+				line-height: 36px;
+			}
+			
+			#comment {
+				width: 100%;
+			}
+			
+			#comment-btn {
+				width: 15%;
+				margin-left: 3%;
+			}
+			
+			#comment-btn button {
+				background: transparent;
+				color: #666;
+				height: 39px;
+				width: 110%;
+			}
+			
+			#mask {
+				/*background-position: 47%;*/
+				background-color: black;
+				background-size: contain;
+				background-repeat: no-repeat;
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+				z-index: 2001;
+			}
+			
+			#comment-btn {
+				/*background-color: red;*/
+				border-radius: 40px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar  mui-bar-transparent" style=" z-index:2002 ;">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+
+		</header>
+		<div class="mui-content">
+			<div style="position: relative; height:40vw;z-index:2000 ;margin-bottom: 20px;">
+
+				<video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="420" height="200" poster="http://video-js.zencoder.com/oceans-clip.png" data-setup='{"example_option":true}'>
+
+				</video>
+				<!--这里放的视频图片-->
+			</div>
+
+			<div class="mui-scroll-wrapper" style="margin-top: 210px;">
+				<div class="mui-scroll" style="padding-bottom: 40px;">
+					<!--这里放置真实显示的DOM内容-->
+					<div id="mname1" class="mui-table-view-cell"> <a id="jubao" class="mui-pull-right">举报</a></div>
+					<div id="mdtl" class="mui-table-view-cell"></div>
+					<div id="" class="mui-table-view-cell">
+						<span>简介</span>
+						<p id="content">
+
+						</p>
+					</div>
+					<div class="mui-table-view-cell">评论</div>
+					<ul id="tableview" class="mui-table-view">
+
+					</ul>
+				</div>
+
+			</div>
+			<footer id="ff" class="mui-bar mui-bar-footer">
+				<div class="mui-input-row comment-btn" style="display: block;">
+
+					<div class="footerdiv" id="left_two"><input type="text" id="comment" placeholder="发表评论" /></div>
+					<div class="footerdiv" id="comment-btn"><button type="button" class="fa">发表</button></div>
+				</div>
+			</footer>
+		</div>
+
+	</body>
+		<script src="js/ip.js"></script>
+	<script src="js/mui.min.js"></script>
+	<script src="js/video.min.js"></script>
+	<script type="text/javascript">
+
+	
+
+		mui.plusReady(function() {
+					function getList() {
+
+		};
+
+		mui.init({
+			swipeBack: true, //启用右滑关闭功能
+
+		});
+		mui(".mui-scroll-wrapper").scroll();
+		
+		function showPage(data) {
+			var jubaoList = plus.storage.getItem("jubaoList");
+			var mname1 = document.getElementById("mname1");
+			var mdtl = document.getElementById("mdtl");
+			var a =mname1.querySelector("a");
+			if(!jubaoList){
+				a.innerHTML="举报";
+				a.addEventListener("tap",handle);
+			}else{
+				if(JSON.parse(jubaoList).includes(data.movie.mid)){
+					a.innerHTML="已举报";
+				}
+				else{
+					a.innerHTML="举报";
+					a.addEventListener("tap",handle);
+				}
+			}
+			mname1.innerHTML=data.movie.mname;
+			mname1.appendChild(a);
+			mdtl.innerHTML = data.movie.tname + "，评分：" + data.movie.score;
+			document.getElementById("content").innerHTML = data.movie.brief;
+			document.getElementById("tableview").appendChild(createFragment(data.comments));
+
+			//        视频
+			var url = "http://" + ip + data.movie.movie;
+			//console.log(url);
+			var myPlayer = videojs('my-video');
+			videojs('my-video', {}, function() {
+				window.myPlayer = this;
+				myPlayer.src(url);
+				myPlayer.load(url);
+				if(data.movie.images.indexOf("http") == 0) {
+					myPlayer.poster(data.movie.images);
+				} else {
+					myPlayer.poster("http://" + ip + data.movie.images);
+
+				}
+
+			});
+
+		}
+		var createFragment = function(comments) {
+			var fragment = document.createDocumentFragment();
+			var li;
+			for(var i = 0; i < comments.length; i++) {
+				li = document.createElement('li');
+				li.classList.add('mui-table-view-cell', 'mui-media');
+				var a = document.createElement("a");
+				a.setAttribute("href", "javascript:;");
+				var img = document.createElement("img");
+				img.classList.add("mui-media-object", "mui-pull-left");
+
+				img.setAttribute("src", "http://" + ip + comments[i].photo);
+				var div = document.createElement("div");
+				div.classList.add("mui-media-body");
+
+				div.innerHTML = comments[i].Nname + '<p class="mui-ellipsis">' + comments[i].content + '</p>';
+				a.appendChild(img);
+				a.appendChild(div);
+				li.appendChild(a);
+				fragment.appendChild(li);
+			}
+			return fragment;
+		};
+
+			var mid = plus.webview.currentWebview().mid;
+
+			//console.log(mid);
+			document.getElementById("comment-btn").addEventListener("tap", function() {
+				//console.log(mid);
+				var user = plus.storage.getItem("user");
+				if(user == undefined || user == null || user == "") {
+					mui.toast("请先登录");
+					return;
+				}
+				user = JSON.parse(user);
+				comment = document.getElementById("comment").value;
+				mui.ajax('http://' + ip + '/douban/addcomment.php', {
+					data: {
+						mid: mid,
+						uid: user.id,
+						comment: comment
+					},
+					dataType: 'json', //服务器返回json格式数据
+					type: 'POST', //HTTP请求类型
+					timeout: 10000, //超时时间设置为10秒；
+					success: function(data) {
+						mui.toast("发表成功");
+						document.getElementById("tableview").insertBefore(createFragment([{
+							content: comment,
+							Nname: user.Nname,
+							photo: user.photo
+						}]), document.getElementById("tableview").children[0]);
+						mui(".mui-scroll-wrapper").scroll().scrollTo(0, 0, 100);
+
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						mui.toast("发表失败");
+					}
+				});
+			});
+			//			举报
+			var handle = function() {
+				//console.log("举报成功");
+				mui.ajax('http://' + ip + '/douban/jubaoMovie.php', {
+					data: {
+						mid: mid,
+					},
+					dataType: 'json', //服务器返回json格式数据
+					type: 'get', //HTTP请求类型
+					timeout: 1000, //超时时间设置为10秒；
+					success: function(data) {
+					 if(data.code==200){
+					 	 mui.toast("举报成功");
+					 	 var mname1 = document.getElementById("mname1");
+					 	 mname1.querySelector("a").innerHTML="已举报";
+					 	 var jubaoList = plus.storage.getItem("jubaoList");
+					 	 if(!jubaoList){
+					 	 	jubaoList=[data.data.mid];
+					 	 	
+					 	 }
+					 	 else{
+					 	 	jubaoList = JSON.parse(jubaoList);
+					 	 	jubaoList.push(data.data.mid);
+					 	 	
+					 	 }
+					 	 plus.storage.setItem("jubaoList",JSON.stringify(jubaoList));
+					 	 	//注销事件
+					 	 	document.getElementById("jubao").removeEventListener("tap",handle);
+					 }
+					     mui.toast(data.message);  
+
+					},
+					error: function(xhr, type, errorThrown) {
+						//异常处理；
+						mui.toast("网络不给力");
+					}
+				});
+
+			};
+			
+			//			举报	
+			
+			
+              //			详情	
+			mui.ajax('http://' + ip + '/douban/de-tails.php', {
+				data: {
+					mid: mid,
+				},
+				dataType: 'json', //服务器返回json格式数据
+				type: 'get', //HTTP请求类型
+				timeout: 10000, //超时时间设置为10秒；
+				success: function(data) {
+					showPage(data);
+
+				},
+				error: function(xhr, type, errorThrown) {
+					//异常处理；
+					mui.toast("获取详情页面失败");
+				}
+			});
+			//console.log(mid);
+
+		});
+	</script>
+
+</html>

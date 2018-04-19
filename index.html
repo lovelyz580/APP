@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="js/mui.min.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<style type="text/css">
+			#button {
+				margin-left: 12px;
+				margin-top: 4px;
+				border-radius: 12px;
+			}
+			.mui-input-row span{
+				display: none;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header id="header" class="mui-bar mui-bar-nav">
+			<div class="mui-input-row mui-search">
+				<input type="text" id="search" class="mui-input-clear" value="" placeholder="搜索电影" style="width: 80%;" />
+				<button id="button" class="button">搜索</button>
+			</div>
+		</header>
+
+		<nav class="mui-bar mui-bar-tab">
+			<a class="mui-tab-item mui-active" href="remen.html">
+				<span class="mui-icon mui-icon-home"></span>
+				<span class="mui-tab-label">热门</span>
+			</a>
+			<a class="mui-tab-item" href="weishangying.html">
+				<span class="mui-icon mui-icon-videocam"></span>
+				<span class="mui-tab-label">未上映</span>
+			</a>
+			<a class="mui-tab-item" href="person.html">
+				<span class="mui-icon mui-icon-starhalf"></span>
+				<span class="mui-tab-label">我</span>
+			</a>
+
+			<a class="mui-tab-item" href="yishangying.html">
+				<span class="mui-icon mui-icon-spinner mui-spin"></span>
+				<span class="mui-tab-label">上映中</span>
+			</a>
+			<a class="mui-tab-item" href="paihang.html">
+				<span class="mui-icon mui-icon-starhalf"></span>
+				<span class="mui-tab-label">排行</span>
+			</a>
+
+		</nav>
+	</body>
+<script src="js/mui.min.js"></script>
+		<script src="js/ip.js"></script>
+		<script type="text/javascript">
+		mui.init();
+		var subpages = ["remen.html", "weishangying.html","person.html",  "yishangying.html", "paihang.html", "login.html"]
+		var subpages_style = {
+			top: "44px",
+			bottom: "50px"
+
+		}
+		//   mui.plusReady(function(){ 
+		var index = 0;
+		mui.plusReady(function() {
+			//			var lauchFlag=plus.storage.getItem("lauchFlag");
+			//			if(!lauchFlag){
+			//				mui.openWindow({
+			//					url:"guide.html",
+			//					id:"guide.html"
+			//				});
+			//			}
+
+			function plusReady() {
+				var self = plus.webview.currentWebview();
+				for(var i = 0; i < subpages.length; i++) {
+					//创   建webView子页面
+					if(subpages[i] == "person.html" || subpages[i] == "login.html") {
+						var sub = plus.webview.create(subpages[i], subpages[i], {
+							bottom: '50px'
+						});
+					} else {
+						var sub = plus.webview.create(subpages[i], subpages[i], subpages_style);
+					}
+
+					if(i != index) {
+						sub.hide();
+					}
+					self.append(sub);
+				} // 在这里调用plus api
+			}
+			if(window.plus) {
+				plusReady();
+			} else {
+				document.addEventListener('plusready', plusReady, false);
+			}
+			//获取当前的webView
+			//当前激活的选项卡
+			var activeTab = subpages[index];
+			var title = document.querySelector(".mui-title");
+			mui(".mui-bar-tab").on("tap", "a", function() {
+				//获取要显示的页面id
+				var targetid = this.getAttribute("href");
+				if(targetid == activeTab) {
+					return;
+				}
+
+				document.getElementById("header").style.display = "block";
+				//目标子页面
+				if(targetid == "person.html") {
+					var user = plus.storage.getItem("user"); //未登录
+					document.getElementById("header").style.display = "none";
+					//user={};
+					if(user == null || user == undefined) {
+						//alert("未登录");
+						targetid = "login.html"; //未登录
+
+						//console.log(targetid);
+					} else {
+						targetid = "person.html"; //已登录
+						//alert("已登录");
+						//console.log(targetid);
+					}
+				} 
+				else{
+					document.getElementById("header").style.display = "block";
+				}
+
+				//改变标题栏
+				//title.innerHTML = this.querySelector(".mui-tab-label").innerHTML;
+				//显示目标子页面
+				plus.webview.show(targetid);
+				//隐藏当前显示卡
+				plus.webview.hide(activeTab);
+				activeTab = targetid;
+			});
+
+			//			点击事件
+
+			//监听点击事件
+			document.getElementById("button").addEventListener("tap", function() {
+				var key = document.getElementById("search").value;
+				//console.log(key); //获取文本框的值
+				mui.openWindow({
+					id: "search.html",
+					url: "search.html",
+					extras: {
+						key:key
+					},
+					styles: {
+						popGesture: "close"
+					}
+				})
+			});
+		});
+	</script>
+
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html style="height: 100%;">
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" /> >
+		<style type="text/css">
+			.mui-content {
+				/*background-color: black;*/
+				height: 100%;
+				background-position: center;
+				background-size: contain;
+				background-repeat: no-repeat;
+			}
+		</style>
+	</head>
+
+	<body style="height: 100%;">
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">个人头像设置</h1>
+			<a id="more" class=" mui-icon mui-icon-more mui-pull-right"></a>
+		</header>
+		<div class="mui-content">
+			<div></div>
+		</div>
+
+	<script src="js/mui.min.js"></script>
+		<script src="js/ip.js"></script>
+		<script type="text/javascript">
+			mui.init()
+			mui.plusReady(function() {
+				var user = plus.storage.getItem("user");
+				user = JSON.parse(user);
+				document.querySelector(".mui-content").style.backgroundImage = "url(http://" + ip + user.photo + ")";
+				document.getElementById("more").addEventListener("tap", function() {
+					var a = [{
+						title: '拍照'
+					}, {
+						title: '从手机相册选择'
+					}];
+					plus.nativeUI.actionSheet({
+						title: '修改头像',
+						cancel: '取消',
+						buttons: a
+					}, function(b) {
+						switch(b.index) {
+							case 0:
+								break;
+							case 1:
+								//拍照
+								//alert("此功能正在更新中!")
+								getImages();
+								break;
+							case 2:
+								//打开相册
+								galleryImages();
+								break;
+							default:
+								break;
+						}
+					}, false);
+				});
+				//			    照相
+								function getImages() {
+									var cmr = plus.camera.getCamera();
+									var res = cmr.supportedImageResolutions[0];
+									var fmt = cmr.supportedImageFormats[0];
+									console.log(res);
+									console.log(fmt);
+									//console.log("Resolution:" + res + ",Format: " + fmt);
+									cmr.captureImage(function(path) {
+											console.log("Capture image success: " + path);
+											//var path1=plus.io.convertLocalFileSystemURL(path);
+												//alert(path1);
+											plus.io.resolveLocalFileSystemURL(path, function(entry) {
+												// 可通过entry对象操作test.html文件 
+												plus.gallery.save(path);
+												//console.log(entry.toLocalURL());
+												//path=path.substr(5);
+												console.log(path);
+												//uploadImages("file://storage/emulated/0/DCIM/Camera/"+path); //上传头像的
+												uploadImages(path); //上传头像的
+												
+											}, function(e) {
+												alert("Resolve file URL failed: " + e.message);
+											});
+											
+				
+										},
+										function(erroe) {
+											console.log("Capture image failed: " + erroe.message);
+										}, {
+											resolution: "_doc/camera",
+											format: "jpg"
+										}
+				
+									);
+									//console.log("  照相");
+								}
+				//			    照相
+
+				//			    相册
+				function galleryImages() {
+					//console.log("相册");
+					plus.gallery.pick(function(path) {
+						console.log(path);
+						uploadImages(path); //上传头像的
+					});
+				}
+				//			    相册
+				//				上传头像
+				function uploadImages(path) {
+					plus.nativeUI.showWaiting();
+					//console.log("up="+path);
+
+					var task = plus.uploader.createUpload("http://" + ip + "/douban/uploadHeader.php", {
+							method: "POST",
+							priority: 100
+						},
+						function(t, status) {
+
+							if(status == 200) {
+								var data = JSON.parse(task.responseText);
+								if(data.code == 200) {
+									plus.nativeUI.closeWaiting();
+									user.photo = data.data.path;
+									plus.storage.setItem(JSON.stringify(user));
+									var target = plus.webview.getWebviewById("person.html");
+									mui.fire(target, "update", {
+										key: "photo",
+										value: data.data.path
+									});
+									mui.back();
+								} else {
+									mui.toast(data.message);
+								}
+							} else {
+								mui.toast("修改失败");
+							}
+
+						}
+
+					);
+
+					task.addFile(path, {
+						key: "header"
+					});
+					task.addData("id", user.id);
+					task.start();
+				}
+				//				上传头像
+
+			});
+		</script>
+	</body>
+
+</html>

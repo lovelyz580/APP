@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="js/mui.min.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<style type="text/css">
+			#popover {
+				height: 100%;
+				width: 100%;
+				background-color: white;
+			}
+		</style>
+
+	</head>
+
+	<body>
+
+		<header class="mui-bar mui-bar-nav" style="margin-top: 60px;">
+			<h1 class="mui-title">个人信息</h1>
+		</header>
+		<div class="mui-content" style="margin-top: 62px;">
+			<form id="login-form" class="mui-input-group">
+				<div class="mui-table-view-cell" id="headerphoto">
+					<label style="line-height: 50px;">头像</label>
+					<span style="line-height: 50px;" class="mui-icon mui-icon-forward mui-pull-right"></span>
+					<img id="photo" src="" class="mui-pull-right" style="width: 50px;height: 50px;" />
+				</div>
+				<div class="mui-table-view-cell" id="sexdiv">
+					<label style="line-height: 50px;">性别</label>
+					<span style="line-height: 50px;" class="mui-icon mui-icon-forward mui-pull-right"></span>
+					<span id="sex" style="line-height: 50px;" class="mui-pull-right"></span>
+				</div>
+				<div class="mui-table-view-cell">
+					<label style="line-height: 50px;">个性签名</label>
+					<span style="line-height: 50px;" class="mui-icon mui-icon-forward mui-pull-right"></span>
+					<span id="jianjie" style="line-height: 50px;" class="mui-pull-right"></span>
+				</div>
+				<div class="mui-table-view-cell">
+					<label style="line-height: 50px;">昵称</label>
+					<span style="line-height: 50px;" class="mui-icon mui-icon-forward mui-pull-right"></span>
+					<span id="Nname" style="line-height: 50px;" class="mui-pull-right"></span>
+				</div>
+			</form>
+			<div class="mui-content-padded">
+				<button id="paishe" class="mui-btn mui-btn-block mui-btn-primary">拍摄视频</button>
+
+				<button id="logout" class="mui-btn mui-btn-block mui-btn-primary">退出登录</button>
+			</div>
+			<div id="popover" class="mui-popover mui-popover-action mui-popover-bottom">
+				<header class="mui-bar mui-bar-nav" style="margin-top: 60px;">
+					<a id="close" class="mui-icon mui-icon-closeempty mui-pull-left"></a>
+					<h1 class="mui-title">上传视频</h1>
+				</header>
+				<form class="mui-input-group" style="margin-top: 100px;">
+					<div class="mui-input-row">
+						<label>标题</label>
+						<input id="title" type="text" class="mui-input-clear" placeholder="短视频标题" />
+					</div>
+					<div class="mui-input-row">
+						<label>描述</label>
+
+					</div>
+					<textarea id="content" name="" rows="5" cols="50">
+                    			
+                    		</textarea>
+					<div class="mui-button-row">
+						<button id="done" type="button" class="mui-btn mui-btn-primary">确认</button>
+					</div>
+
+				</form>
+			</div>
+		</div>
+
+	<script src="js/mui.min.js"></script>
+		<script src="js/ip.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			mui.plusReady(function() {
+				var path;
+				var user = plus.storage.getItem("user");
+				//console.log(user);
+				user = JSON.parse(user);
+				//
+				document.getElementById("photo").setAttribute("src", "http://" + ip + user.photo);
+				//console.log(photo);
+				document.getElementById("sex").innerHTML = user.sex == 2 ? "无" : (user.sex == 0 ? "女" : "男");
+				//console.log(sex);
+				document.getElementById("jianjie").innerHTML = user.jianjie == undefined ? '无' : (user.jianjie);
+				//console.log(jianjie);
+				document.getElementById("Nname").innerHTML = user.Nname == undefined ? '无' : (user.Nname);
+				//console.log(Nname);
+				//              退出登录
+				document.getElementById("logout").addEventListener("tap", function() {
+					plus.storage.removeItem("user");
+					plus.webview.show("login.html");
+					plus.webview.hide("person.html");
+				});
+				//				拍视频
+				document.getElementById("paishe").addEventListener("tap", function() {
+				//alert("此功能正在升级！")
+					var cmr = plus.camera.getCamera();
+					var res = cmr.supportedVideoResolutions[0];
+					var fmt = cmr.supportedVideoFormats[0];
+					
+
+					cmr.startVideoCapture(function(p) {
+							path = p;
+						
+							mui("#popover").popover("show");
+						},
+						function(error) {
+							
+						}, {
+							resolution: res,
+							format: fmt
+						}
+					);
+				});
+				document.getElementById("close").addEventListener("tap", function() {
+					mui("#popover").popover("hide");
+
+				});
+				
+				
+				document.getElementById("done").addEventListener("tap", function() {
+	           alert("开始上传！");
+	             plus.nativeUI.showWaiting();
+	             var  tt = plus.uploader.createUpload("http://"+ip+"/douban/uploadMovie.php",
+	             {method:"POST",priority:100},
+	             function (t,status){
+	             	console.log(tt.responseText);
+	             	if(status==200){
+	             		var data = JSON.parse(tt.responseText);
+	             		
+	             		if(data.code ==200){
+	             			
+	             			plus.nativeUI.closeWaiting();
+	             			mui("#popover").popover("hide");
+	             			
+	             		}
+	             		else{
+	             			mui.toast(data.message);
+	             		}
+	             	}
+	             	
+	             	else{
+	             		mui.toast("网络不网络给网络力");
+	             	}
+	             });
+	              tt.addFile(path,{key:"movie"});
+	            tt.addData("title",document.getElementById("title").value);
+	            tt.addData("content",document.getElementById("content").value);
+	            tt.addData("uid",user.id);
+	            tt.start();
+	            
+	            
+	            
+	         
+	          
+             
+				});
+
+			});
+			
+			
+			//			修改头像
+			document.getElementById("headerphoto").addEventListener("tap", function() {
+				mui.openWindow({
+					id: "header.html",
+					url: "header.html"
+				})
+			});
+			//			修改头像
+
+
+
+			//			修改性别
+			document.getElementById("sexdiv").addEventListener("tap", function() {
+				mui.openWindow({
+					id: "updateSex.html",
+					url: "updateSex.html"
+				})
+			});
+			//自定义事件监听
+			window.addEventListener("update", function(event) {
+				var key = event.detail.key;
+				if(key == "sex") {
+					document.getElementById("sex").innerHTML = event.detail.value == 0 ? '女' : '男';
+				} else if(key == "Nname" || key == "jianjie") {
+					document.getElementById("key").innerHTML = event.detail.value;
+				} else if(key == "photo") {
+					document.getElementById("photo").setAttribute("src", "http://" + ip + event.detail.value);
+				}
+
+			});
+			//监听事件   重新刷新
+			window.addEventListener("refresh", function(event) {
+				location.reload();
+			})
+			//			修改性别
+		</script>
+	</body>
+
+</html>
